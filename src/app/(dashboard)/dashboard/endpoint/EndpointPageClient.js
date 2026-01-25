@@ -6,6 +6,11 @@ import { Card, Button, Input, Modal, CardSkeleton } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 const CLOUD_URL = process.env.NEXT_PUBLIC_CLOUD_URL;
+const ENABLE_DEBUG_LOGS = process.env.NEXT_PUBLIC_DEBUG_LOGGING === "true";
+const log = (...args) => {
+  if (!ENABLE_DEBUG_LOGS) return;
+  console.log("[EndpointPageClient]", ...args);
+};
 
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
@@ -25,31 +30,42 @@ export default function APIPageClient({ machineId }) {
   const { copied, copy } = useCopyToClipboard();
 
   useEffect(() => {
+    log("mounting client", { machineId });
     fetchData();
     loadCloudSettings();
   }, []);
 
   const loadCloudSettings = async () => {
+    log("loading cloud settings");
     try {
       const res = await fetch("/api/settings");
       if (res.ok) {
         const data = await res.json();
+        log("cloud settings response", data);
         setCloudEnabled(data.cloudEnabled || false);
       }
+      else {
+        log("cloud settings returned error", { status: res.status });
+      }
     } catch (error) {
-      console.log("Error loading cloud settings:", error);
+      log("error loading cloud settings", error);
     }
   };
 
   const fetchData = async () => {
+    log("fetching API keys");
     try {
       const keysRes = await fetch("/api/keys");
       const keysData = await keysRes.json();
       if (keysRes.ok) {
+        log("API keys response", keysData);
         setKeys(keysData.keys || []);
       }
+      else {
+        log("API keys fetch failed", { status: keysRes.status });
+      }
     } catch (error) {
-      console.log("Error fetching data:", error);
+      log("error fetching API keys", error);
     } finally {
       setLoading(false);
     }
@@ -74,6 +90,7 @@ export default function APIPageClient({ machineId }) {
       });
 
       const data = await res.json();
+      log("enable cloud response", { status: res.status, body: data });
       if (res.ok) {
         setSyncStep("verifying");
         
@@ -98,6 +115,7 @@ export default function APIPageClient({ machineId }) {
         setCloudStatus({ type: "error", message: data.error || "Failed to enable cloud" });
       }
     } catch (error) {
+      log("error enabling cloud", error);
       setCloudStatus({ type: "error", message: error.message });
     } finally {
       setCloudSyncing(false);
@@ -106,6 +124,7 @@ export default function APIPageClient({ machineId }) {
   };
 
   const handleConfirmDisable = async () => {
+    log("disabling cloud progress");
     setCloudSyncing(true);
     setSyncStep("syncing");
     
@@ -132,7 +151,7 @@ export default function APIPageClient({ machineId }) {
         setShowDisableModal(false);
       }
     } catch (error) {
-      console.log("Error disabling cloud:", error);
+      log("error disabling cloud", error);
       setCloudStatus({ type: "error", message: "Failed to disable cloud" });
     } finally {
       setCloudSyncing(false);

@@ -3,6 +3,7 @@ const nextConfig = {
   output: "standalone",
   env: {
     NEXT_PUBLIC_CLOUD_URL: "https://9router.com",
+    NEXT_PUBLIC_DEBUG_LOGGING: process.env.NEXT_PUBLIC_DEBUG_LOGGING ?? "false",
   },
   webpack: (config, { isServer }) => {
     // Ignore fs/path modules in browser bundle
