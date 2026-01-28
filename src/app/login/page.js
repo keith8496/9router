@@ -19,19 +19,12 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (!data.password) {
-            // No password set - auto login
-            const loginRes = await fetch("/api/auth/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ password: "123456" }),
-            });
-            if (loginRes.ok) {
-              router.push("/dashboard");
-              router.refresh();
-              return;
-            }
+            setHasPassword(false);
+            return;
           }
-          setHasPassword(!!data.password);
+          setHasPassword(true);
+        } else {
+          setHasPassword(true);
         }
       } catch (err) {
         console.error("Failed to check password status:", err);
@@ -112,7 +105,8 @@ export default function LoginPage() {
             </Button>
 
             <p className="text-xs text-center text-text-muted mt-2">
-              Default password is <code className="bg-sidebar px-1 rounded">123456</code>
+              Default password is <code className="bg-sidebar px-1 rounded">123456</code> unless you override it with
+              <code className="bg-sidebar px-1 rounded mx-1">INITIAL_PASSWORD</code>.
             </p>
           </form>
         </Card>
